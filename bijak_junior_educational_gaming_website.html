@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="ms" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bijak Junior — Portal Pembelajaran Interaktif</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        teal: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                        },
+                        navy: {
+                            800: '#1e3a8a',
+                            900: '#172554',
+                        },
+                        cream: {
+                            100: '#fef3c7',
+                            50: '#fffbeb'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .transition-all { transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 h-full flex flex-col justify-between antialiased">
+
+    <!-- Root Application Container -->
+    <div id="app" class="flex flex-col min-h-full">
+        <!-- Dynamic content will be rendered here by JavaScript -->
+        <div class="flex items-center justify-center flex-grow p-12">
+            <div class="text-center">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mb-4"></div>
+                <p class="text-lg font-semibold text-gray-600">Memuatkan Bijak Junior...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        // --- INITIAL STATE & DATA STORAGE (LocalStorage persistence with seed data) ---
+        
+        // Default seed subjects (Preserving existing subjects as required)
+        const DEFAULT_SUBJECTS = [
+            { id: 'subj-1', name: 'Matematik Ceria', description: 'Belajar mengira, tambah, tolak dan sifir dengan menyeronokkan.', school_year: 'Tahun 1', created_at: new Date().toISOString() },
+            { id: 'subj-2', name: 'Bahasa Melayu Interaktif', description: 'Penguasaan kosa kata, tatabahasa dan ejaan Bahasa Melayu.', school_year: 'Tahun 2', created_at: new Date().toISOString() },
+            { id: 'subj-3', name: 'Sains Kreatif', description: 'Terokai keajaiban alam sains dan eksperimen asas.', school_year: 'Tahun 3', created_at: new Date().toISOString() },
+            { id: 'subj-4', name: 'Bahasa Inggeris Asas', description: 'Vocabulary and phonics for young learners.', school_year: 'Tahun 4', created_at: new Date().toISOString() },
+            { id: 'subj-5', name: 'Sejarah & Budaya', description: 'Mengenal tokoh dan warisan tanah air tercinta.', school_year: 'Tahun 5', created_at: new Date().toISOString() },
+            { id: 'subj-6', name: 'Pendidikan Islam & Moral', description: 'Nilai murni dan akhlak terpuji.', school_year: 'Tahun 6', created_at: new Date().toISOString() }
+        ];
+
+        // Default seed games (Preserving existing game examples)
+        const DEFAULT_GAMES = [
+            { 
+                id: 'game-1', 
+                title: 'Pengembaraan Sifir Ajaib', 
+                description: 'Bantu Sang Kancil menyelesaikan teka-teki sifir untuk sampai ke garisan penamat!', 
+                subject_id: 'subj-1', 
+                school_year: 'Tahun 1', 
+                thumbnail_url: 'https://placehold.co/600x400/0d9488/ffffff?text=Sifir+Ajaib', 
+                game_url: 'https://www.example.com/games/math-adventure', 
+                status: 'published', 
+                created_at: new Date().toISOString(), 
+                updated_at: new Date().toISOString() 
+            },
+            { 
+                id: 'game-2', 
+                title: 'Teka Kata Berirama', 
+                description: 'Cari perkataan tersembunyi dan bina ayat lengkap dalam Bahasa Melayu.', 
+                subject_id: 'subj-2', 
+                school_year: 'Tahun 2', 
+                thumbnail_url: 'https://placehold.co/600x400/1e3a8a/ffffff?text=Teka+Kata', 
+                game_url: 'https://www.example.com/games/bm-word-game', 
+                status: 'published', 
+                created_at: new Date().toISOString(), 
+                updated_at: new Date().toISOString() 
+            },
+            { 
+                id: 'game-3', 
+                title: 'Misi Saintis Muda: Haba & Suhu', 
+                description: 'Eksperimen maya tentang perubahan keadaan jirim.', 
+                subject_id: 'subj-3', 
+                school_year: 'Tahun 3', 
+                thumbnail_url: 'https://placehold.co/600x400/f59e0b/ffffff?text=Sains+Muda', 
+                game_url: 'https://www.example.com/games/science-heat', 
+                status: 'published', 
+                created_at: new Date().toISOString(), 
+                updated_at: new Date().toISOString() 
+            },
+            { 
+                id: 'game-4', 
+                title: 'Kuiz Pencabar Tahun 4', 
+                description: 'Uji minda Bahasa Inggeris anda dengan cabaran interaktif.', 
+                subject_id: 'subj-4', 
+                school_year: 'Tahun 4', 
+                thumbnail_url: 'https://placehold.co/600x400/0284c7/ffffff?text=English+Quiz', 
+                game_url: 'https://www.example.com/games/eng-quiz', 
+                status: 'pending', 
+                created_at: new Date().toISOString(), 
+                updated_at: new Date().toISOString() 
+            }
+        ];
+
+        // Initialize LocalStorage DB if empty
+        if (!localStorage.getItem('bj_subjects')) {
+            localStorage.setItem('bj_subjects', JSON.stringify(DEFAULT_SUBJECTS));
+        }
+        if (!localStorage.getItem('bj_games')) {
+            localStorage.setItem('bj_games', JSON.stringify(DEFAULT_GAMES));
+        }
+        if (!localStorage.getItem('bj_users')) {
+            // Seed a demo student and a demo admin
+            const defaultUsers = [
+                { id: 'user-admin', full_name: 'Pentadbir Bijak', email: 'admin@bijakjunior.edu.my', role: 'admin', school_year: 'Tahun 6' },
+                { id: 'user-student', full_name: 'Ahmad Zikri', email: 'zikri@student.edu.my', role: 'student', school_year: 'Tahun 2' }
+            ];
+            localStorage.setItem('bj_users', JSON.stringify(defaultUsers));
+        }
+
+        // Current Session State
+        let state = {
+            currentRoute: window.location.hash ? window.location.hash.substring(1) : '/',
+            currentUser: JSON.parse(localStorage.getItem('bj_current_user') || 'null'),
+            selectedSchoolYear: 'Tahun 2',
+            selectedSubjectId: 'all',
+            activeGameModal: null, // game object if playing
+            toastMessage: null,
+            supabaseConfigured: true, // Config switch for Supabase notice banner
+            adminTab: 'overview', // overview, games, subjects, approvals
+            editingGame: null,
+            editingSubject: null
+        };
+
+        // Router listener
+        window.addEventListener('hashchange', () => {
+            state.currentRoute = window.location.hash.substring(1) || '/';
+            renderApp();
+        });
+
+        function navigate(route) {
+            window.location.hash = route;
+        }
+
+        function showToast(message, type = 'success') {
+            state.toastMessage = { message, type };
+            renderApp();
+            setTimeout(() => {
+                state.toastMessage = null;
+                renderApp();
+            }, 4000);
+        }
+
+        // --- RENDER ENGINE ---
+        function renderApp() {
+            const appEl = document.getElementById('app');
+            const subjects = JSON.parse(localStorage.getItem('bj_subjects') || '[]');
+            const games = JSON.parse(localStorage.getItem('bj_games') || '[]');
+            
+            let content = '';
+
+            // Render Toast Notification if present
+            const toastHtml = state.toastMessage ? `
+                <div class="fixed bottom-5 right-5 z-50 animate-bounce bg-white border-l-4 ${state.toastMessage.type === 'error' ? 'border-red-500 text-red-700' : 'border-teal-500 text-teal-800'} p-4 rounded-lg shadow-xl flex items-center space-x-3">
+                    <i class="fa-solid ${state.toastMessage.type === 'error' ? 'fa-circle-exclamation text-red-500' : 'fa-circle-check text-teal-500'} text-xl"></i>
+                    <div>
+                        <p class="font-semibold">${state.toastMessage.type === 'error' ? 'Perhatian' : 'Berjaya'}</p>
+                        <p class="text-sm text-gray-600">${state.toastMessage.message}</p>
+                    </div>
+                </div>
+            ` : '';
+
+            // Route matching
+            if (state.currentRoute === '/login') {
+                content = renderLoginView();
+            } else if (state.currentRoute === '/register') {
+                content = renderRegisterView();
+            } else if (state.currentRoute === '/admin/login') {
+                content = renderAdminLoginView();
+            } else if (state.currentRoute === '/admin') {
+                if (!state.currentUser || state.currentUser.role !== 'admin') {
+                    navigate('/admin/login');
+                    return;
+                }
+                content = renderAdminDashboardView(subjects, games);
+            } else {
+                // Student Homepage
+                content = renderStudentHomeView(subjects, games);
+            }
+
+            appEl.innerHTML = content + toastHtml + renderGameModal() + renderSupabaseConfigModal();
+            attachEventListeners();
+        }
+
+        // --- VIEWS ---
+
+        function renderNavbar() {
+            const user = state.currentUser;
+            return `
+                <nav class="bg-navy-900 text-white shadow-md sticky top-0 z-40">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="flex justify-between h-20 items-center">
+                            <!-- Logo -->
+                            <div class="flex items-center space-x-3 cursor-pointer" onclick="navigate('/')">
+                                <div class="w-12 h-12 bg-teal-500 rounded-2xl flex items-center justify-center shadow-lg transform hover:rotate-6 transition-transform">
+                                    <i class="fa-solid fa-graduation-cap text-white text-2xl"></i>
+                                </div>
+                                <div>
+                                    <span class="text-2xl font-black tracking-wider bg-gradient-to-r from-teal-400 to-cream-100 bg-clip-text text-transparent">Bijak Junior</span>
+                                    <p class="text-xs text-teal-300 font-medium tracking-wide">Portal Pembelajaran Interaktif</p>
+                                </div>
+                            </div>
+
+                            <!-- Navigation Links & User Menu -->
+                            <div class="flex items-center space-x-4">
+                                ${user ? `
+                                    <div class="flex items-center space-x-3 bg-navy-800 px-4 py-2 rounded-xl border border-teal-500/30">
+                                        <div class="w-9 h-9 bg-teal-600 rounded-full flex items-center justify-center font-bold text-white shadow">
+                                            ${user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
+                                        </div>
+                                        <div class="hidden sm:block text-left">
+                                            <p class="text-sm font-bold text-white leading-tight">${user.full_name}</p>
+                                            <span class="text-xs bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-md font-semibold">${user.school_year || 'Tahun 1'}</span>
+                                        </div>
+                                    </div>
+                                    <button onclick="handleLogout()" class="bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white px-4 py-2 rounded-xl text-sm font-bold transition-all border border-red-500/30 flex items-center space-x-2">
+                                        <i class="fa-solid fa-right-from-bracket"></i>
+                                        <span class="hidden md:inline">Log Keluar</span>
+                                    </button>
+                                ` : `
+                                    <div class="flex items-center space-x-2">
+                                        <button onclick="navigate('/login')" class="px-4 py-2 text-sm font-bold text-teal-300 hover:text-white transition-colors">
+                                            Log Masuk
+                                        </button>
+                                        <button onclick="navigate('/register')" class="bg-teal-600 hover:bg-teal-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-teal-600/30 transition-all flex items-center space-x-2">
+                                            <i class="fa-solid fa-user-plus"></i>
+                                            <span>Daftar Akaun</span>
+                                        </button>
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            `;
+        }
+
+        function renderFooter() {
+            return `
+                <footer class="bg-navy-900 text-white py-10 mt-auto border-t border-teal-500/20">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-teal-500 rounded-xl flex items-center justify-center">
+                                <i class="fa-solid fa-graduation-cap text-white text-sm"></i>
+                            </div>
+                            <span class="text-lg font-bold">Bijak Junior &copy; 2026</span>
+                        </div>
+                        <p class="text-sm text-gray-400 text-center">Platform Permainan Pendidikan Interaktif untuk Sekolah Rendah Malaysia.</p>
+                        <div class="flex items-center space-x-4">
+                            <button onclick="navigate('/admin/login')" class="text-xs text-gray-400 hover:text-teal-400 transition-colors flex items-center space-x-1 bg-navy-800 px-3 py-1.5 rounded-lg border border-gray-700">
+                                <i class="fa-solid fa-gear"></i>
+                                <span>Admin</span>
+                            </button>
+                        </div>
+                    </div>
+                </footer>
+            `;
+        }
+
+        // --- 1. STUDENT HOMEPAGE ---
+        function renderStudentHomeView(subjects, games) {
+            const years = ['Tahun 1', 'Tahun 2', 'Tahun 3', 'Tahun 4', 'Tahun 5', 'Tahun 6'];
+            const currentYear = state.selectedSchoolYear;
+
+            // Filter subjects and published games for selected school year
+            const filteredSubjects = subjects.filter(s => s.school_year === currentYear);
+            const filteredGames = games.filter(g => g.school_year === currentYear && g.status === 'published');
+            const displayedGames = state.selectedSubjectId === 'all' ? filteredGames : filteredGames.filter(g => g.subject_id === state.selectedSubjectId);
+
+            return `
+                ${renderNavbar()}
+                <div class="flex-grow">
+                    <!-- Hero Welcome Section -->
+                    <div class="bg-gradient-to-br from-navy-900 via-navy-800 to-teal-900 text-white py-14 px-4 sm:px-6 lg:px-8 shadow-inner relative overflow-hidden">
+                        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                        <div class="max-w-7xl mx-auto text-center relative z-10">
+                            <span class="bg-teal-500/20 text-teal-300 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-teal-500/30 inline-block mb-4">
+                                <i class="fa-solid fa-star text-amber-300 mr-1"></i> Pembelajaran Seronok & Interaktif
+                            </span>
+                            <h1 class="text-3xl sm:text-5xl font-black tracking-tight mb-4">Selamat Datang ke Bijak Junior!</h1>
+                            <p class="text-lg sm:text-xl text-teal-100 max-w-2xl mx-auto font-medium">Pilih tahun persekolahan anda dan mula meneroka permainan pendidikan yang menarik hari ini.</p>
+                        </div>
+                    </div>
+
+                    <!-- School Year Selector Tabs -->
+                    <div class="bg-white border-b border-gray-200 sticky top-20 z-30 shadow-sm">
+                        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div class="flex overflow-x-auto py-4 space-x-3 scrollbar-hide justify-start sm:justify-center">
+                                ${years.map(year => `
+                                    <button onclick="setSchoolYear('${year}')" class="px-5 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all flex items-center space-x-2 ${currentYear === year ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30 transform scale-105' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+                                        <i class="fa-solid fa-school"></i>
+                                        <span>${year}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Content Section -->
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+                        
+                        <!-- Subjects Section -->
+                        <div>
+                            <div class="flex justify-between items-center mb-6">
+                                <div>
+                                    <h2 class="text-2xl font-black text-navy-900">Subjek Pilihan (${currentYear})</h2>
+                                    <p class="text-sm text-gray-500">Pilih subjek untuk memfokuskan pembelajaran.</p>
+                                </div>
+                                <button onclick="filterSubject('all')" class="text-sm font-bold text-teal-600 hover:text-teal-700 bg-teal-50 px-3 py-1.5 rounded-lg border border-teal-100">
+                                    Semua Subjek
+                                </button>
+                            </div>
+
+                            ${filteredSubjects.length === 0 ? `
+                                <div class="bg-white rounded-2xl p-8 text-center border border-gray-200 shadow-sm">
+                                    <i class="fa-solid fa-folder-open text-4xl text-gray-300 mb-3"></i>
+                                    <p class="font-bold text-gray-700">Tiada subjek dijumpai untuk ${currentYear}.</p>
+                                    <p class="text-sm text-gray-500 mt-1">Pentadbir belum menetapkan subjek bagi tahun ini.</p>
+                                </div>
+                            ` : `
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    ${filteredSubjects.map(subj => `
+                                        <div onclick="filterSubject('${subj.id}')" class="bg-white rounded-2xl p-6 border-2 ${state.selectedSubjectId === subj.id ? 'border-teal-500 shadow-lg bg-teal-50/20' : 'border-gray-100 hover:border-teal-300'} shadow-sm cursor-pointer transition-all group">
+                                            <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center font-bold mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                                                <i class="fa-solid fa-book-open text-xl"></i>
+                                            </div>
+                                            <h3 class="text-lg font-bold text-navy-900 mb-1">${subj.name}</h3>
+                                            <p class="text-sm text-gray-600 line-clamp-2">${subj.description}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `}
+                        </div>
+
+                        <!-- Games Section -->
+                        <div>
+                            <div class="flex justify-between items-center mb-6">
+                                <div>
+                                    <h2 class="text-2xl font-black text-navy-900">Permainan Pendidikan</h2>
+                                    <p class="text-sm text-gray-500">Bermain sambil belajar dengan kuiz dan simulasi interaktif.</p>
+                                </div>
+                                <span class="bg-teal-100 text-teal-800 text-xs font-bold px-3 py-1 rounded-full">
+                                    ${displayedGames.length} Permainan Tersedia
+                                </span>
+                            </div>
+
+                            ${displayedGames.length === 0 ? `
+                                <div class="bg-white rounded-3xl p-12 text-center border border-gray-200 shadow-sm">
+                                    <div class="w-16 h-16 bg-cream-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+                                        <i class="fa-solid fa-puzzle-piece"></i>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-gray-800 mb-2">Tiada Permainan Aktif</h3>
+                                    <p class="text-gray-500 max-w-md mx-auto text-sm">Maaf, tiada permainan yang diterbitkan untuk ${currentYear} dalam kategori ini buat masa sekarang. Sila semak semula nanti!</p>
+                                </div>
+                            ` : `
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    ${displayedGames.map(game => `
+                                        <div class="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl border border-gray-100 transition-all flex flex-col justify-between group">
+                                            <div>
+                                                <div class="relative overflow-hidden aspect-video bg-gray-100">
+                                                    <img src="${game.thumbnail_url}" alt="${game.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='https://placehold.co/600x400/0d9488/ffffff?text=Bijak+Junior'">
+                                                    <span class="absolute top-3 left-3 bg-navy-900/80 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full">
+                                                        ${game.school_year}
+                                                    </span>
+                                                </div>
+                                                <div class="p-6">
+                                                    <h3 class="text-xl font-bold text-navy-900 mb-2 group-hover:text-teal-600 transition-colors">${game.title}</h3>
+                                                    <p class="text-sm text-gray-600 line-clamp-3 mb-4">${game.description}</p>
+                                                </div>
+                                            </div>
+                                            <div class="px-6 pb-6 pt-0">
+                                                <button onclick="playGame('${game.id}')" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-2xl shadow-md shadow-teal-600/30 transition-all flex items-center justify-center space-x-2">
+                                                    <i class="fa-solid fa-play"></i>
+                                                    <span>Main Sekarang</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `}
+                        </div>
+
+                    </div>
+                </div>
+                ${renderFooter()}
+            `;
+        }
+
+        // --- 2. STUDENT LOGIN VIEW ---
+        function renderLoginView() {
+            return `
+                ${renderNavbar()}
+                <div class="flex-grow flex items-center justify-center px-4 py-12 bg-gradient-to-br from-navy-900 via-navy-800 to-teal-900">
+                    <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 border border-teal-500/20">
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-teal-600/30">
+                                <i class="fa-solid fa-user text-white text-2xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-black text-navy-900">Log Masuk Murid</h2>
+                            <p class="text-sm text-gray-500 mt-1">Masukkan butiran akaun anda untuk mula bermain.</p>
+                        </div>
+
+                        <form onsubmit="handleLoginSubmit(event)" class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">E-mel</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                                        <i class="fa-solid fa-envelope"></i>
+                                    </span>
+                                    <input type="email" id="login_email" required placeholder="contoh@student.edu.my" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white text-sm outline-none transition-all">
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="block text-sm font-bold text-gray-700">Kata Laluan</label>
+                                    <a href="#" onclick="showToast('Sila hubungi guru anda untuk menetapkan semula kata laluan.', 'error')" class="text-xs font-semibold text-teal-600 hover:underline">Lupa kata laluan?</a>
+                                </div>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
+                                        <i class="fa-solid fa-lock"></i>
+                                    </span>
+                                    <input type="password" id="login_password" required placeholder="••••••••" class="w-full pl-10 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white text-sm outline-none transition-all">
+                                    <button type="button" onclick="togglePasswordVisibility('login_password')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600">
+                                        <i class="fa-solid fa-eye" id="login_password_icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-teal-600/30 transition-all flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-right-to-bracket"></i>
+                                <span>Log Masuk</span>
+                            </button>
+                        </form>
+
+                        <div class="mt-6 text-center border-t border-gray-100 pt-6">
+                            <p class="text-sm text-gray-600">Belum mempunyai akaun? <a href="#" onclick="navigate('/register')" class="text-teal-600 font-bold hover:underline">Daftar sekarang</a></p>
+                        </div>
+                    </div>
+                </div>
+                ${renderFooter()}
+            `;
+        }
+
+        // --- 3. STUDENT REGISTRATION VIEW ---
+        function renderRegisterView() {
+            return `
+                ${renderNavbar()}
+                <div class="flex-grow flex items-center justify-center px-4 py-12 bg-gradient-to-br from-navy-900 via-navy-800 to-teal-900">
+                    <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 border border-teal-500/20">
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-teal-600/30">
+                                <i class="fa-solid fa-user-plus text-white text-2xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-black text-navy-900">Daftar Akaun Murid</h2>
+                            <p class="text-sm text-gray-500 mt-1">Sertai Bijak Junior untuk mula meneroka permainan pembelajaran.</p>
+                        </div>
+
+                        <form onsubmit="handleRegisterSubmit(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nama Murid</label>
+                                <input type="text" id="reg_name" required placeholder="Nama penuh anda" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white text-sm outline-none transition-all">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">E-mel</label>
+                                <input type="email" id="reg_email" required placeholder="nama@student.edu.my" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white text-sm outline-none transition-all">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Tahun Persekolahan</label>
+                                <select id="reg_year" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white text-sm outline-none transition-all font-semibold">
+                                    <option value="Tahun 1">Tahun 1</option>
+                                    <option value="Tahun 2" selected>Tahun 2</option>
+                                    <option value="Tahun 3">Tahun 3</option>
+                                    <option value="Tahun 4">Tahun 4</option>
+                                    <option value="Tahun 5">Tahun 5</option>
+                                    <option value="Tahun 6">Tahun 6</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Kata Laluan (Min. 8 aksara)</label>
+                                <input type="password" id="reg_pass" required minlength="8" placeholder="••••••••" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white text-sm outline-none transition-all">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Sahkan Kata Laluan</label>
+                                <input type="password" id="reg_pass_confirm" required minlength="8" placeholder="••••••••" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white text-sm outline-none transition-all">
+                            </div>
+
+                            <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-teal-600/30 transition-all flex items-center justify-center space-x-2 mt-2">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Daftar Akaun</span>
+                            </button>
+                        </form>
+
+                        <div class="mt-6 text-center border-t border-gray-100 pt-6">
+                            <p class="text-sm text-gray-600">Sudah mempunyai akaun? <a href="#" onclick="navigate('/login')" class="text-teal-600 font-bold hover:underline">Log masuk</a></p>
+                        </div>
+                    </div>
+                </div>
+                ${renderFooter()}
+            `;
+        }
+
+        // --- 4. ADMIN LOGIN VIEW ---
+        function renderAdminLoginView() {
+            return `
+                ${renderNavbar()}
+                <div class="flex-grow flex items-center justify-center px-4 py-12 bg-gradient-to-br from-navy-900 via-navy-800 to-teal-900">
+                    <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 border border-amber-500/20">
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 bg-navy-900 text-teal-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg border border-teal-500/30">
+                                <i class="fa-solid fa-shield-halved text-2xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-black text-navy-900">Log Masuk Pentadbir</h2>
+                            <p class="text-sm text-gray-500 mt-1">Akses khusus untuk guru dan pengurusan sistem.</p>
+                        </div>
+
+                        <form onsubmit="handleAdminLoginSubmit(event)" class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">E-mel Pentadbir</label>
+                                <input type="email" id="admin_email" required placeholder="admin@bijakjunior.edu.my" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-navy-900 focus:bg-white text-sm outline-none transition-all">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Kata Laluan</label>
+                                <input type="password" id="admin_password" required placeholder="••••••••" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-navy-900 focus:bg-white text-sm outline-none transition-all">
+                            </div>
+
+                            <button type="submit" class="w-full bg-navy-900 hover:bg-navy-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-lock-open"></i>
+                                <span>Masuk Dashboard Admin</span>
+                            </button>
+                        </form>
+
+                        <div class="mt-6 text-center border-t border-gray-100 pt-6">
+                            <button onclick="navigate('/')" class="text-sm text-gray-500 hover:text-navy-900 font-semibold flex items-center justify-center space-x-1 mx-auto">
+                                <i class="fa-solid fa-arrow-left"></i>
+                                <span>Kembali ke Laman Utama</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                ${renderFooter()}
+            `;
+        }
+
+        // --- 5. ADMIN DASHBOARD VIEW ---
+        function renderAdminDashboardView(subjects, games) {
+            const totalGames = games.length;
+            const publishedGames = games.filter(g => g.status === 'published').length;
+            const pendingGames = games.filter(g => g.status === 'pending').length;
+            const totalSubjects = subjects.length;
+
+            return `
+                <div class="min-h-full flex flex-col bg-gray-100">
+                    <!-- Admin Header -->
+                    <header class="bg-navy-900 text-white shadow-md sticky top-0 z-40">
+                        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between h-20 items-center">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center font-bold text-white shadow">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                </div>
+                                <div>
+                                    <span class="text-xl font-black">Dashboard Pentadbir</span>
+                                    <p class="text-xs text-amber-300">Bijak Junior Management Portal</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <button onclick="navigate('/')" class="bg-navy-800 hover:bg-navy-700 text-teal-300 px-4 py-2 rounded-xl text-sm font-bold border border-teal-500/20 flex items-center space-x-2">
+                                    <i class="fa-solid fa-globe"></i>
+                                    <span>Lihat Laman Murid</span>
+                                </button>
+                                <button onclick="handleLogout()" class="bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white px-4 py-2 rounded-xl text-sm font-bold transition-all border border-red-500/30 flex items-center space-x-2">
+                                    <i class="fa-solid fa-right-from-bracket"></i>
+                                    <span>Log Keluar</span>
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-8 flex-grow">
+                        
+                        <!-- Statistics Cards -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 flex items-center space-x-4">
+                                <div class="w-14 h-14 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                                    <i class="fa-solid fa-gamepad"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-400 uppercase">Jumlah Permainan</p>
+                                    <h3 class="text-2xl font-black text-navy-900">${totalGames}</h3>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 flex items-center space-x-4">
+                                <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-400 uppercase">Diterbitkan</p>
+                                    <h3 class="text-2xl font-black text-navy-900">${publishedGames}</h3>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 flex items-center space-x-4">
+                                <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                                    <i class="fa-solid fa-clock"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-400 uppercase">Menunggu Kelulusan</p>
+                                    <h3 class="text-2xl font-black text-navy-900">${pendingGames}</h3>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 flex items-center space-x-4">
+                                <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+                                    <i class="fa-solid fa-book"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-400 uppercase">Jumlah Subjek</p>
+                                    <h3 class="text-2xl font-black text-navy-900">${totalSubjects}</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Admin Tabs Navigation -->
+                        <div class="bg-white p-2 rounded-2xl shadow-sm border border-gray-200 flex flex-wrap gap-2">
+                            <button onclick="setAdminTab('overview')" class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center space-x-2 ${state.adminTab === 'overview' ? 'bg-navy-900 text-white shadow' : 'text-gray-600 hover:bg-gray-100'}">
+                                <i class="fa-solid fa-chart-pie"></i>
+                                <span>Ringkasan & Kelulusan</span>
+                            </button>
+                            <button onclick="setAdminTab('games')" class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center space-x-2 ${state.adminTab === 'games' ? 'bg-navy-900 text-white shadow' : 'text-gray-600 hover:bg-gray-100'}">
+                                <i class="fa-solid fa-gamepad"></i>
+                                <span>Urus Permainan</span>
+                            </button>
+                            <button onclick="setAdminTab('subjects')" class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center space-x-2 ${state.adminTab === 'subjects' ? 'bg-navy-900 text-white shadow' : 'text-gray-600 hover:bg-gray-100'}">
+                                <i class="fa-solid fa-book"></i>
+                                <span>Urus Subjek</span>
+                            </button>
+                        </div>
+
+                        <!-- TAB 1: OVERVIEW & PENDING APPROVALS -->
+                        ${state.adminTab === 'overview' ? `
+                            <div class="space-y-6">
+                                <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-6">
+                                    <h3 class="text-xl font-black text-navy-900 mb-4 flex items-center space-x-2">
+                                        <i class="fa-solid fa-list-check text-amber-500"></i>
+                                        <span>Permainan Menunggu Kelulusan (${pendingGames})</span>
+                                    </h3>
+
+                                    ${pendingGames === 0 ? `
+                                        <div class="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                            <i class="fa-solid fa-circle-check text-4xl text-green-500 mb-2"></i>
+                                            <p class="font-bold text-gray-700">Tiada permainan menunggu kelulusan.</p>
+                                            <p class="text-sm text-gray-500">Semua permainan telah diproses.</p>
+                                        </div>
+                                    ` : `
+                                        <div class="overflow-x-auto">
+                                            <table class="w-full text-left border-collapse">
+                                                <thead>
+                                                    <tr class="border-b border-gray-200 text-xs font-bold text-gray-400 uppercase">
+                                                        <th class="py-3 px-4">Permainan</th>
+                                                        <th class="py-3 px-4">Tahun</th>
+                                                        <th class="py-3 px-4">Status</th>
+                                                        <th class="py-3 px-4 text-right">Tindakan</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-gray-100">
+                                                    ${games.filter(g => g.status === 'pending').map(game => `
+                                                        <tr class="hover:bg-gray-50">
+                                                            <td class="py-4 px-4 flex items-center space-x-3">
+                                                                <img src="${game.thumbnail_url}" class="w-12 h-12 object-cover rounded-xl" onerror="this.src='https://placehold.co/100x100/0d9488/ffffff?text=Game'">
+                                                                <div>
+                                                                    <p class="font-bold text-navy-900">${game.title}</p>
+                                                                    <p class="text-xs text-gray-500 line-clamp-1">${game.description}</p>
+                                                                </div>
+                                                            </td>
+                                                            <td class="py-4 px-4 font-semibold text-sm">${game.school_year}</td>
+                                                            <td class="py-4 px-4">
+                                                                <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">Pending</span>
+                                                            </td>
+                                                            <td class="py-4 px-4 text-right space-x-2">
+                                                                <button onclick="approveGame('${game.id}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow">
+                                                                    <i class="fa-solid fa-check mr-1"></i> Luluskan
+                                                                </button>
+                                                                <button onclick="rejectGame('${game.id}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow">
+                                                                    <i class="fa-solid fa-xmark mr-1"></i> Tolak
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    `).join('')}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- TAB 2: MANAGE GAMES -->
+                        ${state.adminTab === 'games' ? `
+                            <div class="space-y-6">
+                                <div class="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-gray-200">
+                                    <div>
+                                        <h3 class="text-xl font-black text-navy-900">Senarai Semua Permainan</h3>
+                                        <p class="text-sm text-gray-500">Tambah, sunting, terbit atau padam permainan.</p>
+                                    </div>
+                                    <button onclick="openGameModal(null)" class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-teal-600/30 flex items-center space-x-2">
+                                        <i class="fa-solid fa-plus"></i>
+                                        <span>Tambah Permainan</span>
+                                    </button>
+                                </div>
+
+                                <div class="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr class="border-b border-gray-200 text-xs font-bold text-gray-400 uppercase bg-gray-50">
+                                                    <th class="py-4 px-6">Permainan</th>
+                                                    <th class="py-4 px-6">Tahun</th>
+                                                    <th class="py-4 px-6">Status</th>
+                                                    <th class="py-4 px-6 text-right">Tindakan</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-100">
+                                                ${games.map(game => `
+                                                    <tr class="hover:bg-gray-50">
+                                                        <td class="py-4 px-6 flex items-center space-x-3">
+                                                            <img src="${game.thumbnail_url}" class="w-12 h-12 object-cover rounded-xl" onerror="this.src='https://placehold.co/100x100/0d9488/ffffff?text=Game'">
+                                                            <div>
+                                                                <p class="font-bold text-navy-900">${game.title}</p>
+                                                                <p class="text-xs text-gray-500 line-clamp-1">${game.description}</p>
+                                                            </div>
+                                                        </td>
+                                                        <td class="py-4 px-6 font-semibold text-sm">${game.school_year}</td>
+                                                        <td class="py-4 px-6">
+                                                            <span class="px-3 py-1 rounded-full text-xs font-bold ${game.status === 'published' ? 'bg-green-100 text-green-800' : game.status === 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-700'}">
+                                                                ${game.status.toUpperCase()}
+                                                            </span>
+                                                        </td>
+                                                        <td class="py-4 px-6 text-right space-x-2">
+                                                            <button onclick="openGameModal('${game.id}')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-xl text-xs font-bold">
+                                                                <i class="fa-solid fa-pen"></i>
+                                                            </button>
+                                                            <button onclick="togglePublishGame('${game.id}')" class="bg-teal-50 hover:bg-teal-100 text-teal-600 px-3 py-1.5 rounded-xl text-xs font-bold">
+                                                                <i class="fa-solid ${game.status === 'published' ? 'fa-eye-slash' : 'fa-eye'}"></i>
+                                                            </button>
+                                                            <button onclick="deleteGame('${game.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl text-xs font-bold">
+                                                                <i class="fa-solid fa-trash"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- TAB 3: MANAGE SUBJECTS -->
+                        ${state.adminTab === 'subjects' ? `
+                            <div class="space-y-6">
+                                <div class="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-gray-200">
+                                    <div>
+                                        <h3 class="text-xl font-black text-navy-900">Senarai Subjek</h3>
+                                        <p class="text-sm text-gray-500">Urus subjek dan tetapan tahun persekolahan.</p>
+                                    </div>
+                                    <button onclick="openSubjectModal(null)" class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-teal-600/30 flex items-center space-x-2">
+                                        <i class="fa-solid fa-plus"></i>
+                                        <span>Tambah Subjek</span>
+                                    </button>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    ${subjects.map(subj => `
+                                        <div class="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm flex flex-col justify-between">
+                                            <div>
+                                                <div class="flex justify-between items-start mb-4">
+                                                    <span class="bg-teal-100 text-teal-800 text-xs font-bold px-3 py-1 rounded-full">${subj.school_year}</span>
+                                                    <div class="space-x-1">
+                                                        <button onclick="openSubjectModal('${subj.id}')" class="text-gray-400 hover:text-blue-600 p-1"><i class="fa-solid fa-pen"></i></button>
+                                                        <button onclick="deleteSubject('${subj.id}')" class="text-gray-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash"></i></button>
+                                                    </div>
+                                                </div>
+                                                <h4 class="text-lg font-bold text-navy-900 mb-2">${subj.name}</h4>
+                                                <p class="text-sm text-gray-600 mb-4">${subj.description}</p>
+                                            </div>
+                                            <div class="text-xs text-gray-400 border-t pt-3">ID: ${subj.id}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                    </div>
+                    ${renderFooter()}
+                </div>
+                ${state.editingGame !== null ? renderGameFormModal(subjects) : ''}
+                ${state.editingSubject !== null ? renderSubjectFormModal() : ''}
+            `;
+        }
+
+        // --- MODALS & GAME PLAYER ---
+
+        function renderGameModal() {
+            if (!state.activeGameModal) return '';
+            const game = state.activeGameModal;
+            return `
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+                    <div class="bg-white w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+                        <div class="bg-navy-900 text-white px-6 py-4 flex justify-between items-center">
+                            <div class="flex items-center space-x-3">
+                                <span class="bg-teal-500 text-white text-xs font-bold px-3 py-1 rounded-full">${game.school_year}</span>
+                                <h3 class="text-xl font-bold">${game.title}</h3>
+                            </div>
+                            <button onclick="closeGameModal()" class="text-gray-300 hover:text-white text-xl p-2">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        <div class="p-6 bg-gray-50 flex-grow overflow-y-auto space-y-6">
+                            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                                <p class="text-gray-700 font-medium mb-4">${game.description}</p>
+                                <div class="aspect-video bg-navy-900 rounded-2xl overflow-hidden flex flex-col items-center justify-center text-white relative shadow-inner">
+                                    <div class="absolute inset-0 bg-cover bg-center opacity-30" style="background-image: url('${game.thumbnail_url}')"></div>
+                                    <div class="relative z-10 text-center p-6 space-y-4">
+                                        <div class="w-20 h-20 bg-teal-500 text-white rounded-full flex items-center justify-center mx-auto text-3xl shadow-xl animate-pulse">
+                                            <i class="fa-solid fa-gamepad"></i>
+                                        </div>
+                                        <h4 class="text-2xl font-black">Permainan Sedia Dimainkan!</h4>
+                                        <p class="text-sm text-teal-200 max-w-md">Klik butang di bawah untuk melancarkan modul pembelajaran interaktif.</p>
+                                        <a href="${game.game_url}" target="_blank" class="inline-flex items-center space-x-2 bg-teal-500 hover:bg-teal-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all">
+                                            <i class="fa-solid fa-rocket"></i>
+                                            <span>Mula Bermain Penuh</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white px-6 py-4 border-t border-gray-200 flex justify-end">
+                            <button onclick="closeGameModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2.5 rounded-xl font-bold text-sm">
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderGameFormModal(subjects) {
+            const game = state.editingGame;
+            const isNew = game.id === undefined;
+            return `
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+                    <div class="bg-white w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+                        <div class="bg-navy-900 text-white px-6 py-4 flex justify-between items-center">
+                            <h3 class="text-xl font-bold">${isNew ? 'Tambah Permainan Baru' : 'Sunting Permainan'}</h3>
+                            <button onclick="closeGameFormModal()" class="text-gray-300 hover:text-white text-xl p-2"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <form onsubmit="saveGameSubmit(event)" class="p-6 space-y-4 overflow-y-auto flex-grow">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Tajuk Permainan</label>
+                                <input type="text" id="form_game_title" required value="${game.title || ''}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Penerangan</label>
+                                <textarea id="form_game_desc" required rows="3" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-500">${game.description || ''}</textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Tahun Persekolahan</label>
+                                    <select id="form_game_year" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold outline-none">
+                                        ${['Tahun 1','Tahun 2','Tahun 3','Tahun 4','Tahun 5','Tahun 6'].map(y => `<option value="${y}" ${game.school_year === y ? 'selected' : ''}>${y}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Subjek</label>
+                                    <select id="form_game_subject" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold outline-none">
+                                        ${subjects.map(s => `<option value="${s.id}" ${game.subject_id === s.id ? 'selected' : ''}>${s.name} (${s.school_year})</option>`).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">URL Thumbnail Gambar</label>
+                                <input type="url" id="form_game_thumb" required value="${game.thumbnail_url || 'https://placehold.co/600x400/0d9488/ffffff?text=Bijak'}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">URL Fail / Pautan Permainan</label>
+                                <input type="url" id="form_game_url" required value="${game.game_url || 'https://www.example.com'}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Status</label>
+                                <select id="form_game_status" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold outline-none">
+                                    <option value="pending" ${game.status === 'pending' ? 'selected' : ''}>Pending (Menunggu)</option>
+                                    <option value="published" ${game.status === 'published' ? 'selected' : ''}>Published (Diterbitkan)</option>
+                                    <option value="unpublished" ${game.status === 'unpublished' ? 'selected' : ''}>Unpublished</option>
+                                </select>
+                            </div>
+                            <input type="hidden" id="form_game_id" value="${game.id || ''}">
+                            <div class="pt-4 flex justify-end space-x-3">
+                                <button type="button" onclick="closeGameFormModal()" class="px-5 py-2.5 rounded-xl bg-gray-200 text-gray-700 font-bold text-sm">Batal</button>
+                                <button type="submit" class="px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm shadow">Simpan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSubjectFormModal() {
+            const subj = state.editingSubject;
+            const isNew = subj.id === undefined;
+            return `
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+                    <div class="bg-white w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+                        <div class="bg-navy-900 text-white px-6 py-4 flex justify-between items-center">
+                            <h3 class="text-xl font-bold">${isNew ? 'Tambah Subjek Baru' : 'Sunting Subjek'}</h3>
+                            <button onclick="closeSubjectFormModal()" class="text-gray-300 hover:text-white text-xl p-2"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <form onsubmit="saveSubjectSubmit(event)" class="p-6 space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nama Subjek</label>
+                                <input type="text" id="form_subj_name" required value="${subj.name || ''}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Penerangan Subjek</label>
+                                <textarea id="form_subj_desc" required rows="3" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none">${subj.description || ''}</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Tahun Persekolahan</label>
+                                <select id="form_subj_year" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold outline-none">
+                                    ${['Tahun 1','Tahun 2','Tahun 3','Tahun 4','Tahun 5','Tahun 6'].map(y => `<option value="${y}" ${subj.school_year === y ? 'selected' : ''}>${y}</option>`).join('')}
+                                </select>
+                            </div>
+                            <input type="hidden" id="form_subj_id" value="${subj.id || ''}">
+                            <div class="pt-4 flex justify-end space-x-3">
+                                <button type="button" onclick="closeSubjectFormModal()" class="px-5 py-2.5 rounded-xl bg-gray-200 text-gray-700 font-bold text-sm">Batal</button>
+                                <button type="submit" class="px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm shadow">Simpan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSupabaseConfigModal() {
+            if (state.supabaseConfigured) return '';
+            return `
+                <div class="bg-navy-900 text-white px-4 py-3 text-xs sm:text-sm flex justify-between items-center border-b border-teal-500/30">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-database text-teal-400"></i>
+                        <span>Mod Simulasi Supabase Aktif. Sila masukkan pembolehubah persekitaran (.env) untuk sambungan pangkalan data langsung.</span>
+                    </div>
+                    <button onclick="dismissSupabaseBanner()" class="text-teal-300 hover:text-white font-bold px-2 py-1">Tutup</button>
+                </div>
+            `;
+        }
+
+        function dismissSupabaseBanner() {
+            state.supabaseConfigured = true;
+            renderApp();
+        }
+
+        // --- CONTROLLER ACTIONS ---
+
+        function setSchoolYear(year) {
+            state.selectedSchoolYear = year;
+            state.selectedSubjectId = 'all';
+            renderApp();
+        }
+
+        function filterSubject(subjectId) {
+            state.selectedSubjectId = subjectId;
+            renderApp();
+        }
+
+        function setAdminTab(tab) {
+            state.adminTab = tab;
+            renderApp();
+        }
+
+        function togglePasswordVisibility(fieldId) {
+            const input = document.getElementById(fieldId);
+            const icon = document.getElementById(fieldId + '_icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        }
+
+        function handleLoginSubmit(event) {
+            event.preventDefault();
+            const email = document.getElementById('login_email').value;
+            const password = document.getElementById('login_password').value;
+
+            const users = JSON.parse(localStorage.getItem('bj_users') || '[]');
+            const user = users.find(u => u.email === email);
+
+            if (user) {
+                state.currentUser = user;
+                localStorage.setItem('bj_current_user', JSON.stringify(user));
+                showToast(`Selamat kembali, ${user.full_name}!`);
+                navigate('/');
+            } else {
+                // If not found in seed, create student profile session automatically for testing
+                const newUser = { id: 'user-' + Date.now(), full_name: email.split('@')[0], email, role: 'student', school_year: 'Tahun 2' };
+                users.push(newUser);
+                localStorage.setItem('bj_users', JSON.stringify(users));
+                state.currentUser = newUser;
+                localStorage.setItem('bj_current_user', JSON.stringify(newUser));
+                showToast(`Log masuk berjaya sebagai ${newUser.full_name}!`);
+                navigate('/');
+            }
+        }
+
+        function handleRegisterSubmit(event) {
+            event.preventDefault();
+            const name = document.getElementById('reg_name').value;
+            const email = document.getElementById('reg_email').value;
+            const year = document.getElementById('reg_year').value;
+            const pass = document.getElementById('reg_pass').value;
+            const passConfirm = document.getElementById('reg_pass_confirm').value;
+
+            if (pass !== passConfirm) {
+                showToast('Kata laluan tidak sepadan!', 'error');
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem('bj_users') || '[]');
+            if (users.some(u => u.email === email)) {
+                showToast('E-mel ini telah didaftarkan.', 'error');
+                return;
+            }
+
+            const newUser = { id: 'user-' + Date.now(), full_name: name, email, role: 'student', school_year: year };
+            users.push(newUser);
+            localStorage.setItem('bj_users', JSON.stringify(users));
+            state.currentUser = newUser;
+            localStorage.setItem('bj_current_user', JSON.stringify(newUser));
+
+            showToast('Akaun berjaya didaftarkan!');
+            navigate('/');
+        }
+
+        function handleAdminLoginSubmit(event) {
+            event.preventDefault();
+            const email = document.getElementById('admin_email').value;
+            const password = document.getElementById('admin_password').value;
+
+            const users = JSON.parse(localStorage.getItem('bj_users') || '[]');
+            let admin = users.find(u => u.email === email && u.role === 'admin');
+
+            if (!admin) {
+                // Default admin fallback
+                admin = { id: 'user-admin', full_name: 'Pentadbir Bijak', email: email, role: 'admin', school_year: 'Tahun 6' };
+                users.push(admin);
+                localStorage.setItem('bj_users', JSON.stringify(users));
+            }
+
+            state.currentUser = admin;
+            localStorage.setItem('bj_current_user', JSON.stringify(admin));
+            showToast('Log masuk Pentadbir Berjaya!');
+            navigate('/admin');
+        }
+
+        function handleLogout() {
+            state.currentUser = null;
+            localStorage.removeItem('bj_current_user');
+            showToast('Anda telah log keluar.');
+            navigate('/');
+        }
+
+        function playGame(gameId) {
+            const games = JSON.parse(localStorage.getItem('bj_games') || '[]');
+            state.activeGameModal = games.find(g => g.id === gameId);
+            renderApp();
+        }
+
+        function closeGameModal() {
+            state.activeGameModal = null;
+            renderApp();
+        }
+
+        function approveGame(gameId) {
+            let games = JSON.parse(localStorage.getItem('bj_games') || '[]');
+            games = games.map(g => g.id === gameId ? { ...g, status: 'published', updated_at: new Date().toISOString() } : g);
+            localStorage.setItem('bj_games', JSON.stringify(games));
+            showToast('Permainan telah diluluskan dan diterbitkan!');
+            renderApp();
+        }
+
+        function rejectGame(gameId) {
+            let games = JSON.parse(localStorage.getItem('bj_games') || '[]');
+            games = games.map(g => g.id === gameId ? { ...g, status: 'rejected', updated_at: new Date().toISOString() } : g);
+            localStorage.setItem('bj_games', JSON.stringify(games));
+            showToast('Permainan telah ditolak.', 'error');
+            renderApp();
+        }
+
+        function togglePublishGame(gameId) {
+            let games = JSON.parse(localStorage.getItem('bj_games') || '[]');
+            games = games.map(g => {
+                if (g.id === gameId) {
+                    const newStatus = g.status === 'published' ? 'unpublished' : 'published';
+                    return { ...g, status: newStatus, updated_at: new Date().toISOString() };
+                }
+                return g;
+            });
+            localStorage.setItem('bj_games', JSON.stringify(games));
+            showToast('Status permainan dikemas kini!');
+            renderApp();
+        }
+
+        function deleteGame(gameId) {
+            if (!confirm('Adakah anda pasti ingin memadam permainan ini?')) return;
+            let games = JSON.parse(localStorage.getItem('bj_games') || '[]');
+            games = games.filter(g => g.id !== gameId);
+            localStorage.setItem('bj_games', JSON.stringify(games));
+            showToast('Permainan telah dipadam.');
+            renderApp();
+        }
+
+        function openGameModal(gameId) {
+            if (gameId) {
+                const games = JSON.parse(localStorage.getItem('bj_games') || '[]');
+                state.editingGame = games.find(g => g.id === gameId);
+            } else {
+                state.editingGame = { title: '', description: '', school_year: 'Tahun 1', subject_id: 'subj-1', thumbnail_url: 'https://placehold.co/600x400/0d9488/ffffff?text=Bijak', game_url: 'https://www.example.com', status: 'published' };
+            }
+            renderApp();
+        }
+
+        function closeGameFormModal() {
+            state.editingGame = null;
+            renderApp();
+        }
+
+        function saveGameSubmit(event) {
+            event.preventDefault();
+            const id = document.getElementById('form_game_id').value || 'game-' + Date.now();
+            const title = document.getElementById('form_game_title').value;
+            const description = document.getElementById('form_game_desc').value;
+            const school_year = document.getElementById('form_game_year').value;
+            const subject_id = document.getElementById('form_game_subject').value;
+            const thumbnail_url = document.getElementById('form_game_thumb').value;
+            const game_url = document.getElementById('form_game_url').value;
+            const status = document.getElementById('form_game_status').value;
+
+            let games = JSON.parse(localStorage.getItem('bj_games') || '[]');
+            const existingIndex = games.findIndex(g => g.id === id);
+
+            const gameObj = { id, title, description, school_year, subject_id, thumbnail_url, game_url, status, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+
+            if (existingIndex >= 0) {
+                games[existingIndex] = gameObj;
+            } else {
+                games.push(gameObj);
+            }
+
+            localStorage.setItem('bj_games', JSON.stringify(games));
+            state.editingGame = null;
+            showToast('Permainan berjaya disimpan!');
+            renderApp();
+        }
+
+        function deleteSubject(subjId) {
+            if (!confirm('Adakah anda pasti ingin memadam subjek ini?')) return;
+            let subjects = JSON.parse(localStorage.getItem('bj_subjects') || '[]');
+            subjects = subjects.filter(s => s.id !== subjId);
+            localStorage.setItem('bj_subjects', JSON.stringify(subjects));
+            showToast('Subjek telah dipadam.');
+            renderApp();
+        }
+
+        function openSubjectModal(subjId) {
+            if (subjId) {
+                const subjects = JSON.parse(localStorage.getItem('bj_subjects') || '[]');
+                state.editingSubject = subjects.find(s => s.id === subjId);
+            } else {
+                state.editingSubject = { name: '', description: '', school_year: 'Tahun 1' };
+            }
+            renderApp();
+        }
+
+        function closeSubjectFormModal() {
+            state.editingSubject = null;
+            renderApp();
+        }
+
+        function saveSubjectSubmit(event) {
+            event.preventDefault();
+            const id = document.getElementById('form_subj_id').value || 'subj-' + Date.now();
+            const name = document.getElementById('form_subj_name').value;
+            const description = document.getElementById('form_subj_desc').value;
+            const school_year = document.getElementById('form_subj_year').value;
+
+            let subjects = JSON.parse(localStorage.getItem('bj_subjects') || '[]');
+            const existingIndex = subjects.findIndex(s => s.id === id);
+
+            const subjObj = { id, name, description, school_year, created_at: new Date().toISOString() };
+
+            if (existingIndex >= 0) {
+                subjects[existingIndex] = subjObj;
+            } else {
+                subjects.push(subjObj);
+            }
+
+            localStorage.setItem('bj_subjects', JSON.stringify(subjects));
+            state.editingSubject = null;
+            showToast('Subjek berjaya disimpan!');
+            renderApp();
+        }
+
+        function attachEventListeners() {
+            // Additional event bindings if needed
+        }
+
+        // Initial render on load
+        window.onload = () => {
+            renderApp();
+        };
+    </script>
+</body>
+</html>

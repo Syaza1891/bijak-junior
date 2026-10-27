@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pintar Alpha — Portal Pembelajaran & Permainan</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        teal: {
+                            DEFAULT: '#0d9488',
+                            dark: '#0f766e',
+                            light: '#14b8a6',
+                        },
+                        darkblue: '#1e3a8a',
+                        cream: '#fef3c7',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js untuk interaktiviti -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- FontAwesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased min-h-screen flex flex-col justify-between" x-data="pintarApp()">
+
+    <!-- NAVIGATION BAR -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <a href="#" @click.prevent="currentView = 'home'" class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-teal rounded-2xl flex items-center justify-center text-white text-2xl shadow-md">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-tight text-darkblue">Pintar<span class="text-teal">Alpha</span></span>
+                    <span class="block text-xs text-gray-500 font-medium">Portal Pendidikan Interaktif</span>
+                </div>
+            </a>
+
+            <div class="flex items-center space-x-4">
+                <template x-if="!currentUser">
+                    <div class="space-x-2">
+                        <button @click="currentView = 'login'" class="px-4 py-2 text-teal font-semibold hover:bg-teal/10 rounded-xl transition">Log Masuk</button>
+                        <button @click="currentView = 'register'" class="px-5 py-2.5 bg-teal text-white font-semibold rounded-xl shadow-md hover:bg-teal-dark transition">Daftar Akaun</button>
+                    </div>
+                </template>
+
+                <template x-if="currentUser">
+                    <div class="flex items-center space-x-4">
+                        <div class="text-right hidden sm:block">
+                            <span class="block text-sm font-bold text-darkblue" x-text="currentUser.username"></span>
+                            <span class="block text-xs text-teal font-semibold">Akses: <span x-text="currentUser.allowedYears.join(', ') || 'Tiada'"></span></span>
+                        </div>
+                        <button @click="logout()" class="px-4 py-2 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 transition">
+                            <i class="fa-solid fa-right-from-bracket mr-1"></i> Keluar
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow">
+        
+        <!-- 1. STUDENT HOMEPAGE -->
+        <template x-if="currentView === 'home'">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="bg-gradient-to-r from-teal to-teal-dark rounded-3xl p-8 sm:p-12 text-white shadow-xl mb-10 relative overflow-hidden">
+                    <div class="relative z-10 max-w-2xl">
+                        <span class="px-3 py-1 bg-white/20 rounded-full text-xs font-bold uppercase tracking-wider mb-4 inline-block">Seronok & Berilmu</span>
+                        <h1 class="text-3xl sm:text-5xl font-black mb-4">Selamat Datang ke Pintar Alpha!</h1>
+                        <p class="text-teal-100 text-lg mb-6">Pilih tahun persekolahan yang telah diluluskan untuk anda dan mula meneroka bahan pembelajaran!</p>
+                    </div>
+                    <div class="absolute right-4 bottom-4 opacity-10 text-9xl">
+                        <i class="fa-solid fa-gamepad"></i>
+                    </div>
+                </div>
+
+                <!-- School Year Selection -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-bold text-darkblue mb-4 flex items-center">
+                        <i class="fa-solid fa-layer-group text-teal mr-2"></i> Pilih Tahun Persekolahan
+                    </h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <template x-for="year in ['Tahun 1', 'Tahun 2', 'Tahun 3', 'Tahun 4', 'Tahun 5', 'Tahun 6']">
+                            <button @click="selectYear(year)" 
+                                    :class="selectedYear === year ? 'bg-darkblue text-white shadow-lg scale-105' : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'"
+                                    class="py-4 px-6 rounded-2xl font-bold text-center transition transform duration-200">
+                                <span class="block text-lg" x-text="year"></span>
+                                <span class="text-xs opacity-75" x-text="hasAccess(year) ? '✅ Dibuka' : '🔒 Terkunci'"></span>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Games & Notes Grid -->
+                <div>
+                    <h2 class="text-xl font-bold text-darkblue mb-6 flex items-center">
+                        <i class="fa-solid fa-book-open text-teal mr-2"></i> Bahan Untuk <span class="text-teal ml-1" x-text="selectedYear"></span>
+                    </h2>
+
+                    <!-- Semak jika user ada akses ke tahun ini -->
+                    <template x-if="currentUser && !hasAccess(selectedYear)">
+                        <div class="bg-amber-50 border border-amber-200 rounded-3xl p-8 text-center text-amber-800">
+                            <i class="fa-solid fa-lock text-4xl mb-2"></i>
+                            <h3 class="font-bold text-lg">Akses Disekat</h3>
+                            <p class="text-sm mt-1">Anda belum mempunyai kebenaran akses untuk <span x-text="selectedYear"></span>. Sila minta admin berikan akses atau buat bayaran yuran.</p>
+                        </div>
+                    </template>
+
+                    <template x-if="!currentUser || hasAccess(selectedYear)">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <template x-for="game in getFilteredGames()" :key="game.id">
+                                <div class="bg-white rounded-3xl p-6 shadow-md border border-gray-100 flex flex-col justify-between hover:shadow-xl transition">
+                                    <div>
+                                        <template x-if="game.thumbnail">
+                                            <div class="h-40 rounded-2xl mb-4 overflow-hidden bg-gray-100">
+                                                <img :src="game.thumbnail" class="w-full h-full object-cover" alt="Thumbnail">
+                                            </div>
+                                        </template>
+                                        <template x-if="!game.thumbnail">
+                                            <div class="h-40 bg-teal/10 rounded-2xl mb-4 flex items-center justify-center text-teal text-5xl">
+                                                <i :class="game.icon || 'fa-solid fa-puzzle-piece'"></i>
+                                            </div>
+                                        </template>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-xs font-bold text-teal bg-teal/10 px-3 py-1 rounded-full uppercase" x-text="game.subject"></span>
+                                            <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-semibold" x-text="game.type || 'Permainan'"></span>
+                                        </div>
+                                        <h3 class="text-xl font-bold text-darkblue mb-1" x-text="game.title"></h3>
+                                        <p class="text-gray-600 text-sm mb-4" x-text="game.description"></p>
+                                    </div>
+                                    <a :href="game.url || '#'" @click="if(!game.url) { alert('Sila masukkan pautan fail yang sah.'); }" target="_blank" class="w-full py-3 bg-teal hover:bg-teal-dark text-white font-bold rounded-2xl shadow-md transition flex items-center justify-center space-x-2">
+                                        <i class="fa-solid fa-play"></i>
+                                        <span x-text="game.type === 'Nota PDF' ? 'Buka Nota' : 'Main Sekarang'"></span>
+                                    </a>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template x-if="(currentUser && hasAccess(selectedYear) && getFilteredGames().length === 0) || (!currentUser && getFilteredGames().length === 0)">
+                        <div class="bg-white rounded-3xl p-12 text-center border border-gray-200 shadow-sm">
+                            <div class="text-6xl text-gray-300 mb-4"><i class="fa-solid fa-folder-open"></i></div>
+                            <h3 class="text-lg font-bold text-darkblue mb-1">Tiada Bahan Dijumpai</h3>
+                            <p class="text-gray-500 text-sm">Belum ada bahan diterbitkan untuk <span x-text="selectedYear"></span>.</p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- 2. LOGIN VIEW -->
+        <template x-if="currentView === 'login'">
+            <div class="max-w-md mx-auto px-4 py-16">
+                <div class="bg-white rounded-3xl p-8 shadow-xl border border-gray-100">
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-teal text-white rounded-2xl mx-auto flex items-center justify-center text-3xl mb-4 shadow-md">
+                            <i class="fa-solid fa-right-to-bracket"></i>
+                        </div>
+                        <h2 class="text-2xl font-black text-darkblue">Log Masuk Murid</h2>
+                        <p class="text-gray-500 text-sm mt-1">Gunakan Username dan Password anda</p>
+                    </div>
+
+                    <form @submit.prevent="handleLogin()" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Username</label>
+                            <input type="text" x-model="loginForm.username" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-teal" placeholder="namamurid">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Kata Laluan</label>
+                            <input type="password" x-model="loginForm.password" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-teal" placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="w-full py-3.5 bg-teal hover:bg-teal-dark text-white font-bold rounded-xl shadow-lg transition">Log Masuk</button>
+                    </form>
+
+                    <div class="text-center mt-6">
+                        <p class="text-sm text-gray-600">Belum ada akaun? <a href="#" @click.prevent="currentView = 'register'" class="text-teal font-bold hover:underline">Daftar sekarang</a></p>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- 3. REGISTER VIEW (USERNAME & PASSWORD SAHAJA) -->
+        <template x-if="currentView === 'register'">
+            <div class="max-w-md mx-auto px-4 py-12">
+                <div class="bg-white rounded-3xl p-8 shadow-xl border border-gray-100">
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-teal text-white rounded-2xl mx-auto flex items-center justify-center text-3xl mb-4 shadow-md">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </div>
+                        <h2 class="text-2xl font-black text-darkblue">Daftar Akaun Murid</h2>
+                        <p class="text-gray-500 text-sm mt-1">Cipta Username dan Kata Laluan anda</p>
+                    </div>
+
+                    <form @submit.prevent="handleRegister()" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Username</label>
+                            <input type="text" x-model="registerForm.username" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-teal" placeholder="namamurid">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Kata Laluan</label>
+                            <input type="password" x-model="registerForm.password" required minlength="6" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-teal" placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="w-full py-3.5 bg-teal hover:bg-teal-dark text-white font-bold rounded-xl shadow-lg transition">Hantar Pendaftaran</button>
+                    </form>
+
+                    <div class="text-center mt-6">
+                        <p class="text-sm text-gray-600">Sudah ada akaun? <a href="#" @click.prevent="currentView = 'login'" class="text-teal font-bold hover:underline">Log masuk</a></p>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- 4. ADMIN DASHBOARD -->
+        <template x-if="currentView === 'admin'">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+                    <div>
+                        <span class="text-xs font-bold text-teal uppercase tracking-wider">Panel Kawalan Pentadbir</span>
+                        <h1 class="text-2xl font-black text-darkblue">Dashboard Admin</h1>
+                    </div>
+                    <button @click="currentView = 'home'" class="mt-4 sm:mt-0 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Web Utama
+                    </button>
+                </div>
+
+                <!-- Admin Tabs -->
+                <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-4">
+                    <button @click="adminTab = 'students'" :class="adminTab === 'students' ? 'bg-teal text-white' : 'bg-white text-gray-700 border'" class="px-5 py-2.5 rounded-xl font-bold transition">
+                        Kelulusan & Tetapan Akses Murid
+                    </button>
+                    <button @click="adminTab = 'games'" :class="adminTab === 'games' ? 'bg-teal text-white' : 'bg-white text-gray-700 border'" class="px-5 py-2.5 rounded-xl font-bold transition">
+                        Senarai Bahan/Permainan
+                    </button>
+                    <button @click="adminTab = 'addGame'" :class="adminTab === 'addGame' ? 'bg-teal text-white' : 'bg-white text-gray-700 border'" class="px-5 py-2.5 rounded-xl font-bold transition">
+                        ➕ Tambah Permainan/Nota Baru
+                    </button>
+                </div>
+
+                <!-- TAB 1: KELULUSAN & TETAPAN AKSES TAHUN -->
+                <template x-if="adminTab === 'students'">
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                        <h2 class="text-xl font-bold text-darkblue mb-2">Kelulusan Murid & Tetapan Akses Tahun</h2>
+                        <p class="text-gray-500 text-sm mb-6">Tandakan kotak tahun untuk memberi kebenaran akses kepada murid (boleh pilih lebih daripada satu).</p>
+                        
+                        <div class="space-y-4">
+                            <template x-for="student in students" :key="student.id">
+                                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                    <div>
+                                        <h3 class="font-bold text-darkblue text-lg" x-text="student.username"></h3>
+                                        <span class="text-xs px-2.5 py-1 rounded-full font-bold" 
+                                              :class="student.status === 'approved' ? 'bg-teal/10 text-teal' : 'bg-amber-100 text-amber-800'"
+                                              x-text="student.status === 'approved' ? 'Diluluskan' : 'Menunggu'"></span>
+                                    </div>
+
+                                    <!-- Checkbox Akses Tahun 1 - 6 -->
+                                    <div class="flex flex-wrap items-center gap-3 bg-white p-3 rounded-xl border">
+                                        <span class="text-xs font-bold text-gray-500 mr-2">Akses Tahun:</span>
+                                        <template x-for="y in ['Tahun 1', 'Tahun 2', 'Tahun 3', 'Tahun 4', 'Tahun 5', 'Tahun 6']">
+                                            <label class="flex items-center space-x-1 text-xs font-bold cursor-pointer">
+                                                <input type="checkbox" :value="y" x-model="student.allowedYears" class="rounded text-teal focus:ring-teal">
+                                                <span x-text="y.replace('Tahun ', 'T')"></span>
+                                            </label>
+                                        </template>
+                                    </div>
+
+                                    <div class="flex items-center space-x-2">
+                                        <template x-if="student.status === 'pending'">
+                                            <button @click="approveStudent(student.id)" class="px-4 py-2 bg-teal text-white text-xs font-bold rounded-xl hover:bg-teal-dark transition">Luluskan</button>
+                                        </template>
+                                        <button @click="deleteStudent(student.id)" class="px-3 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-100 transition"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- TAB 2: SENARAI BAHAN -->
+                <template x-if="adminTab === 'games'">
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                        <h2 class="text-xl font-bold text-darkblue mb-4">Senarai Bahan & Permainan</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-gray-100 text-gray-400 text-xs uppercase font-bold">
+                                        <th class="py-4 px-4">Tajuk</th>
+                                        <th class="py-4 px-4">Tahun</th>
+                                        <th class="py-4 px-4">Subjek</th>
+                                        <th class="py-4 px-4">Jenis</th>
+                                        <th class="py-4 px-4 text-right">Tindakan</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50">
+                                    <template x-for="game in games" :key="game.id">
+                                        <tr>
+                                            <td class="py-4 px-4 font-bold text-darkblue" x-text="game.title"></td>
+                                            <td class="py-4 px-4 text-sm text-gray-600" x-text="game.year"></td>
+                                            <td class="py-4 px-4 text-sm text-gray-600" x-text="game.subject"></td>
+                                            <td class="py-4 px-4 text-sm text-gray-600" x-text="game.type"></td>
+                                            <td class="py-4 px-4 text-right">
+                                                <button @click="deleteGame(game.id)" class="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-100 transition">Padam</button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- TAB 3: TAMBAH BAHAN/PERMAINAN BARU -->
+                <template x-if="adminTab === 'addGame'">
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 max-w-2xl mx-auto">
+                        <h2 class="text-xl font-bold text-darkblue mb-4">Tambah Permainan / Wallpaper / Nota Baru</h2>
+                        
+                        <form @submit.prevent="addNewGame()" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Tajuk Bahan</label>
+                                <input type="text" x-model="newGameForm.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-teal" placeholder="Contoh: Kembara Sifir">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Tahun Persekolahan</label>
+                                    <select x-model="newGameForm.year" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white">
+                                        <option>Tahun 1</option><option>Tahun 2</option><option>Tahun 3</option>
+                                        <option>Tahun 4</option><option>Tahun 5</option><option>Tahun 6</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Subjek</label>
+                                    <input type="text" x-model="newGameForm.subject" required class="w-full px-4 py-3 rounded-xl border border-gray-200" placeholder="Matematik / Bahasa Melayu">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Jenis Bahan</label>
+                                    <select x-model="newGameForm.type" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white">
+                                        <option>Permainan</option>
+                                        <option>Nota PDF</option>
+                                        <option>Wallpaper</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Pautan URL Fail / Game / Gambar</label>
+                                    <input type="text" x-model="newGameForm.url" required class="w-full px-4 py-3 rounded-xl border border-gray-200" placeholder="https://... atau fail.html">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Pautan URL Gambar Thumbnail (Pilihan)</label>
+                                <input type="text" x-model="newGameForm.thumbnail" class="w-full px-4 py-3 rounded-xl border border-gray-200" placeholder="https://... (imej wallpaper/thumbnail)">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Penerangan Ringkas</label>
+                                <textarea x-model="newGameForm.description" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200" placeholder="Penerangan mengenai bahan ini..."></textarea>
+                            </div>
+                            <button type="submit" class="w-full py-3.5 bg-teal hover:bg-teal-dark text-white font-bold rounded-xl shadow-lg transition">Simpan & Terbit Bahan</button>
+                        </form>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-gray-100 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between text-sm text-gray-500">
+            <p>&copy; 2026 Pintar Alpha. Hak Cipta Terpelihara.</p>
+            <div class="mt-4 sm:mt-0 flex items-center space-x-4">
+                <a href="#" @click.prevent="currentView = 'home'" class="hover:text-teal">Utama</a>
+                <span>&bull;</span>
+                <a href="#" @click.prevent="currentView = 'admin'" class="text-gray-400 hover:text-darkblue font-semibold">⚙️ Admin</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPT -->
+    <script>
+        function pintarApp() {
+            return {
+                currentView: 'home',
+                adminTab: 'students',
+                selectedYear: 'Tahun 1',
+                currentUser: null,
+                loginForm: { username: '', password: '' },
+                registerForm: { username: '', password: '' },
+                
+                newGameForm: {
+                    title: '',
+                    year: 'Tahun 1',
+                    subject: 'Matematik',
+                    type: 'Permainan',
+                    url: '',
+                    thumbnail: '',
+                    description: ''
+                },
+
+                students: [
+                    { id: 1, username: 'ahmadzikri', password: '123', status: 'approved', allowedYears: ['Tahun 1', 'Tahun 2'] },
+                    { id: 2, username: 'sitisarah', password: '123', status: 'pending', allowedYears: ['Tahun 1'] }
+                ],
+
+                games: [
+                    { id: 1, title: 'Kembara Sifir Asas', description: 'Belajar sifir matematik interaktif.', year: 'Tahun 1', subject: 'Matematik', type: 'Permainan', url: '#', thumbnail: '', icon: 'fa-solid fa-calculator' },
+                    { id: 2, title: 'Ejaan Ceria BM', description: 'Uji kosa kata Bahasa Melayu.', year: 'Tahun 1', subject: 'Bahasa Melayu', type: 'Permainan', url: '#', thumbnail: '', icon: 'fa-solid fa-book' }
+                ],
+
+                selectYear(year) {
+                    this.selectedYear = year;
+                },
+
+                hasAccess(year) {
+                    if (!this.currentUser) return false;
+                    return this.currentUser.allowedYears.includes(year);
+                },
+
+                getFilteredGames() {
+                    return this.games.filter(g => g.year === this.selectedYear);
+                },
+
+                handleLogin() {
+                    let found = this.students.find(s => s.username === this.loginForm.username && s.password === this.loginForm.password);
+                    if (found) {
+                        if (found.status === 'pending') {
+                            alert('Akaun anda masih menunggu kelulusan admin.');
+                            return;
+                        }
+                        this.currentUser = found;
+                        this.currentView = 'home';
+                        alert('Log masuk berjaya!');
+                    } else {
+                        alert('Username atau kata laluan salah, atau belum berdaftar.');
+                    }
+                },
+
+                handleRegister() {
+                    if(this.students.some(s => s.username === this.registerForm.username)) {
+                        alert('Username ini telah digunakan. Sila pilih yang lain.');
+                        return;
+                    }
+                    this.students.push({
+                        id: Date.now(),
+                        username: this.registerForm.username,
+                        password: this.registerForm.password,
+                        status: 'pending',
+                        allowedYears: ['Tahun 1']
+                    });
+                    alert('Pendaftaran berjaya! Sila tunggu admin meluluskan dan menetapkan akses tahun anda.');
+                    this.registerForm = { username: '', password: '' };
+                    this.currentView = 'login';
+                },
+
+                approveStudent(id) {
+                    let s = this.students.find(x => x.id === id);
+                    if (s) {
+                        s.status = 'approved';
+                        alert('Akaun ' + s.username + ' telah diluluskan!');
+                    }
+                },
+
+                deleteStudent(id) {
+                    if (confirm('Padam akaun murid ini?')) {
+                        this.students = this.students.filter(x => x.id !== id);
+                    }
+                },
+
+                addNewGame() {
+                    this.games.push({
+                        id: Date.now(),
+                        title: this.newGameForm.title,
+                        year: this.newGameForm.year,
+                        subject: this.newGameForm.subject,
+                        type: this.newGameForm.type,
+                        url: this.newGameForm.url,
+                        thumbnail: this.newGameForm.thumbnail,
+                        description: this.newGameForm.description,
+                        icon: 'fa-solid fa-star'
+                    });
+                    alert('Bahan / permainan baru berjaya ditambah!');
+                    this.newGameForm = { title: '', year: 'Tahun 1', subject: 'Matematik', type: 'Permainan', url: '', thumbnail: '', description: '' };
+                    this.adminTab = 'games';
+                },
+
+                deleteGame(id) {
+                    if (confirm('Padam bahan ini?')) {
+                        this.games = this.games.filter(x => x.id !== id);
+                    }
+                },
+
+                logout() {
+                    this.currentUser = null;
+                    alert('Anda telah log keluar.');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
